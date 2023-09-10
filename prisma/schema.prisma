@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user_account {
+  id String @id @default(uuid())
+  email String @unique
+  password String 
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  projects project[]
+}
+
+
+model lambda {
+  id String @id @default(uuid())
+  func String?
+  func_name String? @unique @default(uuid())
+  project project? @relation(references: [id],fields:[project_id])
+  project_id String? @unique
+}
+
+model project {
+  id String @id @default(uuid())
+  project_name String 
+  owner user_account @relation(references: [id],fields:[owner_id])
+  owner_id String
+  function lambda?
+  static_site static_site?
+  swiftbase_db swiftbase_db?
+
+}
+model static_site {
+  id String @id @default(uuid())
+  entry_point String? @default("index.html")
+  project project? @relation(references: [id],fields:[project_id])
+  project_id String? @unique
+  files files[]
+
+}
+
+
+model swiftbase_db{
+  id String @id @default(uuid())
+  token String?
+  modles models[]
+  project project? @relation(references: [id],fields:[project_id])
+  project_id String? @unique
+}
+
+model models {
+  id String @id @default(uuid())
+  model_name String? 
+  data Json?
+  database swiftbase_db? @relation(references: [id],fields: [database_id])
+  database_id String
+ 
+}
+
+model files {
+  id String @id @default(uuid())
+  file_name String?
+  file_type String
+  file String?
+  file_size String?
+  static_site static_site @relation(references: [id],fields:[static_site_id])
+  static_site_id String
+  @@unique([file_name, static_site_id])
+}
+
+enum file_type {
+  HTML
+  JS
+  CSS
+  IMAGE
+  VIDEO
+}
+
+enum service_type {
+  LAMDBA
+  STATIC_HOSTING
+}
+
+enum service {
+  LAMDBA
+  STATIC_HOSTING  
+}
