@@ -23,10 +23,12 @@ export class SwiftbaseDbController {
     const databaseId: string = await this.swiftbaseDbService.getProjectId(
       req.headers,
     );
-    const res = await this.swiftbaseDbService.insertRecord(
-      databaseId,
-      requestBody,
-    );
+    const payload = {
+      database_id: databaseId,
+      model_name: requestBody.model_name,
+      data: requestBody.data,
+    };
+    const res = await this.swiftbaseDbService.insertRecord(payload);
   }
 
   // @Post('/create')
@@ -43,21 +45,23 @@ export class SwiftbaseDbController {
   @Post('/list')
   async list(@Body() requestBody, @Req() req: Request) {
     const database_id = await this.swiftbaseDbService.getProjectId(req.headers);
-    const records = await this.swiftbaseDbService.getRecords(
+    let payload = {
       database_id,
-      requestBody.model_name,
-    );
+      model_name: requestBody.model_name,
+    };
+    const records = await this.swiftbaseDbService.getRecords(payload);
     return records;
   }
 
   @Post('/find')
   async get(@Body() requestBody, @Req() req: Request) {
     const database_id = await this.swiftbaseDbService.getProjectId(req.headers);
-    const result = await this.swiftbaseDbService.get(
+    let payload = {
       database_id,
-      requestBody.model_name,
-      requestBody.constraints,
-    );
+      model_name: requestBody.model_name,
+      constraints: requestBody.constraints,
+    };
+    const result = await this.swiftbaseDbService.get(payload);
     console.log(result);
     return result;
   }
@@ -65,12 +69,13 @@ export class SwiftbaseDbController {
   @Put('/update')
   async update(@Body() requestBody, @Req() req: Request) {
     const database_id = await this.swiftbaseDbService.getProjectId(req.headers);
-    const result = await this.swiftbaseDbService.updateRecord(
+    let payload = {
       database_id,
-      requestBody.model_name,
-      requestBody.constraints,
-      requestBody.data,
-    );
+      model_name: requestBody.model_name,
+      constraints: requestBody.constraints,
+      data: requestBody.data,
+    };
+    const result = await this.swiftbaseDbService.updateRecord(payload);
     return result;
   }
 
@@ -78,11 +83,12 @@ export class SwiftbaseDbController {
   @HttpCode(200)
   async delete(@Body() requestBody, @Req() req: Request) {
     const database_id = await this.swiftbaseDbService.getProjectId(req.headers);
-    const result = await this.swiftbaseDbService.deleteRecord(
+    const payload = {
       database_id,
-      requestBody.model_name,
-      requestBody.constraints,
-    );
+      model_name: requestBody.model_name,
+      raw_constraints: requestBody.constraints,
+    };
+    const result = await this.swiftbaseDbService.deleteRecord(payload);
     return result;
   }
 }

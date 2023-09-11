@@ -3,43 +3,52 @@ import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import prisma from 'src/database/database.service';
+import InsertRecordDto from './dto/db.insert';
+import ListRecordsDto from './dto/db.list';
+import FindByConstraintDto from './dto/db.find';
+import DbUpdateDto from './dto/db.update';
+import DeleteRecordDto from './dto/db.delete';
 
 @Injectable()
 export class SwiftbaseDbService {
   constructor(private prisma: prisma, private jwtService: JwtService) {}
 
-  async deleteRecord(
-    database_id: string,
-    model_name: string,
-    raw_constraints: any,
-  ) {
-    const constraints = await this.constraintBuilder(raw_constraints);
+  async deleteRecord(payload: DeleteRecordDto) {
+    const constraints = await this.constraintBuilder(payload.raw_constraints);
     const result = await this.prisma.models.deleteMany({
       where: {
-        AND: [{ model_name: `${database_id}-${model_name}` }, ...constraints],
+        AND: [
+          { model_name: `${payload.database_id}-${payload.model_name}` },
+          ...constraints,
+        ],
       },
     });
     return result;
   }
-  async updateRecord(
-    database_id: string,
-    model_name: string,
-    constraints: any,
-    data: any,
-  ) {
-    const query = await this.constraintBuilder(constraints);
+
+  async updateRecord(payload: DbUpdateDto) {
+    console.log(payload);
+    const query = await this.constraintBuilder(payload.constraints);
     const originalData = (
-      await this.get(database_id, model_name, constraints)
+      await this.get({
+        database_id: payload.database_id,
+        model_name: payload.model_name,
+        constraints: payload.constraints,
+      })
     )[0] as Prisma.JsonObject;
     let OG = JSON.parse(JSON.stringify(originalData.data));
+    console.log(OG);
     const result = await this.prisma.models.updateMany({
       where: {
-        AND: [{ model_name: `${database_id}-${model_name}` }, ...query],
+        AND: [
+          { model_name: `${payload.database_id}-${payload.model_name}` },
+          ...query,
+        ],
       },
       data: {
         data: {
           ...OG,
-          ...data,
+          ...payload.data,
         },
       },
     });
@@ -53,15 +62,15 @@ export class SwiftbaseDbService {
     }));
     return query;
   }
-  async get(
-    database_id: string,
-    model_name: string,
-    constraints: Array<Record<string, any>>,
-  ) {
-    const query = await this.constraintBuilder(constraints);
+
+  async get(payload: FindByConstraintDto) {
+    const query = await this.constraintBuilder(payload.constraints);
     const result = await this.prisma.models.findMany({
       where: {
-        AND: [{ model_name: `${database_id}-${model_name}` }, ...query],
+        AND: [
+          { model_name: `${payload.database_id}-${payload.model_name}` },
+          ...query,
+        ],
       },
       select: {
         data: true,
@@ -69,10 +78,11 @@ export class SwiftbaseDbService {
     });
     return result as Prisma.JsonArray;
   }
-  async getRecords(database_id: string, model_name: string) {
+
+  async getRecords(payload: ListRecordsDto) {
     const records: any = await this.prisma.models.findMany({
       where: {
-        model_name: `${database_id}-${model_name}`,
+        model_name: `${payload.database_id}-${payload.model_name}`,
       },
       select: {
         data: true,
@@ -81,6 +91,7 @@ export class SwiftbaseDbService {
 
     return records;
   }
+
   async create(project_id: string) {
     try {
       const id = uuidv4();
@@ -149,14 +160,15 @@ export class SwiftbaseDbService {
     }
   }
 
-  async insertRecord(database_id: string, requestBody: any) {
+  async insertRecord(payload: InsertRecordDto) {
     try {
+      //database_id: string, requestBody: any
       const result = await this.prisma.models.create({
         data: {
-          id: requestBody.id ? requestBody.id : uuidv4(),
-          model_name: `${database_id}-${requestBody.model_name}`,
-          database_id,
-          data: requestBody.data,
+          id: payload.id ? payload.id : uuidv4(),
+          model_name: `${payload.database_id}-${payload.model_name}`,
+          database_id: payload.database_id,
+          data: payload.data,
         },
       });
       return result;
