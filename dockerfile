@@ -8,7 +8,7 @@ RUN npm i
 
 RUN npm i @prisma/client 
 
-RUN npx prisma migrate deploy
+RUN npx prisma generate
 
 RUN npm run build
 
