@@ -13,6 +13,7 @@ import {
 import { SwiftbaseDbService } from './swiftbase_db.service';
 
 import { request } from 'http';
+import CreateDatabaseDto from './dto/db.core.create';
 
 @Controller('swiftbase-db')
 export class SwiftbaseDbController {
@@ -31,16 +32,11 @@ export class SwiftbaseDbController {
     const res = await this.swiftbaseDbService.insertRecord(payload);
   }
 
-  // @Post('/create')
-  // async create(@Body() requestBody, @Req() req: Request) {
-  //   const projectId = await this.swiftbaseDbService.getProjectId(req.headers);
-
-  //   const database_id = await this.swiftbaseDbService.createModel(
-  //     projectId,
-  //     requestBody.model_name,
-  //   );
-  //   return database_id;
-  // }
+  @Post('/core/create')
+  async createDB(@Body() requestBody: CreateDatabaseDto, @Req() req: Request) {
+    const result = await this.swiftbaseDbService.createDB(requestBody);
+    return result;
+  }
 
   @Post('/list')
   async list(@Body() requestBody, @Req() req: Request) {
@@ -62,7 +58,6 @@ export class SwiftbaseDbController {
       constraints: requestBody.constraints,
     };
     const result = await this.swiftbaseDbService.get(payload);
-    console.log(result);
     return result;
   }
 

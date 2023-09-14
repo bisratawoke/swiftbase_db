@@ -8,6 +8,7 @@ import ListRecordsDto from './dto/db.list';
 import FindByConstraintDto from './dto/db.find';
 import DbUpdateDto from './dto/db.update';
 import DeleteRecordDto from './dto/db.delete';
+import CreateDatabaseDto from './dto/db.core.create';
 
 @Injectable()
 export class SwiftbaseDbService {
@@ -26,8 +27,26 @@ export class SwiftbaseDbService {
     return result;
   }
 
+  async createDB(payload: CreateDatabaseDto) {
+    let id = uuidv4();
+    const token = await this.jwtService.signAsync(id);
+    await this.prisma.swiftbase_db.create({
+      data: {
+        id,
+        token,
+        project: {
+          connect: {
+            id: payload.project_id,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+    return token;
+  }
   async updateRecord(payload: DbUpdateDto) {
-    console.log(payload);
     const query = await this.constraintBuilder(payload.constraints);
     const originalData = (
       await this.get({
