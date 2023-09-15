@@ -34,11 +34,7 @@ export class SwiftbaseDbService {
       data: {
         id,
         token,
-        project: {
-          connect: {
-            id: payload.project_id,
-          },
-        },
+        project_id: payload.project_id,
       },
       select: {
         id: true,
@@ -119,11 +115,7 @@ export class SwiftbaseDbService {
         data: {
           id,
           token: token,
-          project: {
-            connect: {
-              id: project_id,
-            },
-          },
+          project_id,
         },
         select: {
           id: true,
@@ -152,16 +144,6 @@ export class SwiftbaseDbService {
 
   async createModel(database_id: string, model_name: string) {
     try {
-      // const result = await this.prisma.models.create({
-      //   data: {
-
-      //          database_id,
-      //          model_name: `${database_id}-${model_name}`,
-
-      //     },
-
-      // });
-
       const result = await this.prisma.models.create({
         data: {
           database_id,
