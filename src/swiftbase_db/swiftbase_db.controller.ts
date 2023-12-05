@@ -57,11 +57,13 @@ export class SwiftbaseDbController {
 
   @Post('/list')
   async list(@Body() requestBody, @Req() req: Request) {
+    console.log('========= in list method =================');
     const database_id = await this.swiftbaseDbService.getProjectId(req.headers);
     let payload = {
       database_id,
       model_name: requestBody.model_name,
     };
+    console.log(payload);
     const records = await this.swiftbaseDbService.getRecords(payload);
     return records;
   }
@@ -80,6 +82,7 @@ export class SwiftbaseDbController {
 
   @Put('/update')
   async update(@Body() requestBody, @Req() req: Request) {
+    console.log('======= in update record =======');
     const database_id = await this.swiftbaseDbService.getProjectId(req.headers);
     let payload = {
       database_id,
@@ -87,6 +90,7 @@ export class SwiftbaseDbController {
       constraints: requestBody.constraints,
       data: requestBody.data,
     };
+    console.log(payload);
     const result = await this.swiftbaseDbService.updateRecord(payload);
     return result;
   }

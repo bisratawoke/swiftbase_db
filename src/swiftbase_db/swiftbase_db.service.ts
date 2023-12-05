@@ -92,6 +92,8 @@ export class SwiftbaseDbService {
   }
 
   async updateRecord(payload: DbUpdateDto) {
+    console.log('=== in update record service ====');
+    console.log(payload);
     const query = await this.constraintBuilder(payload.constraints);
     const originalData = (
       await this.get({
