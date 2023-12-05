@@ -9,11 +9,15 @@ import {
   Put,
   Delete,
   HttpCode,
+  Param,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { SwiftbaseDbService } from './swiftbase_db.service';
 
 import { request } from 'http';
 import CreateDatabaseDto from './dto/db.core.create';
+import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
 
 @Controller('swiftbase-db')
 export class SwiftbaseDbController {
@@ -29,13 +33,26 @@ export class SwiftbaseDbController {
       model_name: requestBody.model_name,
       data: requestBody.data,
     };
+    console.log('========== in insert ======');
+    console.log(payload);
     const res = await this.swiftbaseDbService.insertRecord(payload);
   }
 
   @Post('/core/create')
   async createDB(@Body() requestBody: CreateDatabaseDto, @Req() req: Request) {
+    console.log('======= in create =========');
+    console.log(requestBody);
     const result = await this.swiftbaseDbService.createDB(requestBody);
+    console.log(result);
     return result;
+  }
+
+  @Get('/core/info/:projectId')
+  async getDbInfo(@Param() params: any) {
+    console.log('========= i get project info =================');
+    const service = await this.swiftbaseDbService.getDbInfo(params.projectId);
+    console.log(service);
+    return service;
   }
 
   @Post('/list')

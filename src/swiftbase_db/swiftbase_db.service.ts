@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,6 +14,44 @@ import CreateDatabaseDto from './dto/db.core.create';
 export class SwiftbaseDbService {
   constructor(private prisma: prisma, private jwtService: JwtService) {}
 
+  // async getModels(projectId:string) {
+  //   const models = await this.prisma.swiftbase_db.
+  // }
+  async getDbInfo(projectId: string) {
+    try {
+      console.log(projectId);
+      const serviceInfo = await this.prisma.swiftbase_db.findUniqueOrThrow({
+        where: {
+          project_id: projectId,
+        },
+        select: {
+          id: true,
+          token: true,
+          modles: {
+            select: {
+              model_name: true,
+            },
+          },
+        },
+      });
+
+      return serviceInfo;
+    } catch (error: any) {
+      console.log(error);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code == 'P2025'
+      ) {
+        throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+      } else {
+        throw new HttpException(
+          'Server Error',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
   async deleteRecord(payload: DeleteRecordDto) {
     const constraints = await this.constraintBuilder(payload.raw_constraints);
     const result = await this.prisma.models.deleteMany({
@@ -28,9 +66,12 @@ export class SwiftbaseDbService {
   }
 
   async createDB(payload: CreateDatabaseDto) {
+    console.log('====== in create db service =====');
+    console.log(payload);
     let id = uuidv4();
     const token = await this.jwtService.signAsync(id);
-    await this.prisma.swiftbase_db.create({
+
+    let result = await this.prisma.swiftbase_db.create({
       data: {
         id,
         token,
@@ -38,10 +79,18 @@ export class SwiftbaseDbService {
       },
       select: {
         id: true,
+        modles: true,
+        project_id: true,
       },
     });
-    return token;
+    return {
+      id: result.id,
+      token,
+      modles: result.modles,
+      project_id: result.project_id,
+    };
   }
+
   async updateRecord(payload: DbUpdateDto) {
     const query = await this.constraintBuilder(payload.constraints);
     const originalData = (
@@ -52,7 +101,6 @@ export class SwiftbaseDbService {
       })
     )[0] as Prisma.JsonObject;
     let OG = JSON.parse(JSON.stringify(originalData.data));
-    console.log(OG);
     const result = await this.prisma.models.updateMany({
       where: {
         AND: [
