@@ -18,10 +18,14 @@ import { SwiftbaseDbService } from './swiftbase_db.service';
 import { request } from 'http';
 import CreateDatabaseDto from './dto/db.core.create';
 import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
+import { StatService } from 'src/stat/stat.service';
 
 @Controller('swiftbase-db')
 export class SwiftbaseDbController {
-  constructor(private swiftbaseDbService: SwiftbaseDbService) {}
+  constructor(
+    private swiftbaseDbService: SwiftbaseDbService,
+    private statService: StatService,
+  ) {}
 
   @Post('/insert')
   async insert(@Body() requestBody, @Req() req: Request) {
@@ -36,6 +40,10 @@ export class SwiftbaseDbController {
     console.log('========== in insert ======');
     console.log(payload);
     const res = await this.swiftbaseDbService.insertRecord(payload);
+    await this.statService.insert({
+      project_id: databaseId,
+      query_type: 'WRITE',
+    });
   }
 
   @Post('/core/create')
